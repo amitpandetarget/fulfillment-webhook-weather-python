@@ -50,66 +50,47 @@ def webhook():
 
 
 def processRequest(req):
-    if req.get("result").get("action") != "yahooWeatherForecast":
+    if req.get("result").get("action") != "SearchProductInTarget":
         return {}
     baseurl = "https://query.yahooapis.com/v1/public/yql?"
-    yql_query = makeYqlQuery(req)
-    if yql_query is None:
+    responseT = makeTargetQuery(req)
+    if responseT is None:
         return {}
-    yql_url = baseurl + urlencode({'q': yql_query}) + "&format=json"
-    result = urlopen(yql_url).read()
-    data = json.loads(result)
     res = makeWebhookResult(data)
     return res
 
+import requests
+from collections import defaultdict
+import json 
 
-def makeYqlQuery(req):
+def SearchAPICaller(search_string):
+    base_url = "http://10.63.77.129/v1/target/select?authKey=0a81a798b7fea7908b14cff9d95eaa75&q=%s&rows=10"
+    url=base_url % search_string
+    resp = requests.get(url).json()
+    returnVal=defaultdict(dict)
+    for x in range (0,9):
+        returnVal["sku"][x]=resp['response']['docs'][x]['sku'] 
+        returnVal['desc'][x]=resp['response']['docs'][x]['NAME']
+        #returnVal['image'][x] = resp['response']['docs'][x]['IMGURL']
+    return json.dumps(returnVal)
+    
+def makeTargetQuery(req):
     result = req.get("result")
     parameters = result.get("parameters")
-    city = parameters.get("geo-city")
-    if city is None:
-        return None
-
-    return "select * from weather.forecast where woeid in (select woeid from geo.places(1) where text='" + city + "')"
+    things = parameters.get("Things")
+    number = parameters.get("number")
+    search_string= number + things
+    return SearchAPICaller(search_string)
 
 
 def makeWebhookResult(data):
-    query = data.get('query')
-    if query is None:
-        return {}
-
-    result = query.get('results')
-    if result is None:
-        return {}
-
-    channel = result.get('channel')
-    if channel is None:
-        return {}
-
-    item = channel.get('item')
-    location = channel.get('location')
-    units = channel.get('units')
-    if (location is None) or (item is None) or (units is None):
-        return {}
-
-    condition = item.get('condition')
-    if condition is None:
-        return {}
-
-    # print(json.dumps(item, indent=4))
-
-    speech = "Today in " + location.get('city') + ": " + condition.get('text') + \
-             ", the temperature is " + condition.get('temp') + " " + units.get('temperature')
-
-    print("Response:")
-    print(speech)
-
+    speech = "Hey, I am confused, did you buy " + data["sku"][0] +" or "+ data["sku"][1]   
     return {
         "speech": speech,
         "displayText": speech,
         # "data": data,
         # "contextOut": [],
-        "source": "apiai-weather-webhook-sample"
+        "source": "apiai-TargetSearch-webhook-sample"
     }
 
 
