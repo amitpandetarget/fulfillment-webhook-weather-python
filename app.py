@@ -38,7 +38,8 @@ def webhook():
     req = request.get_json(silent=True, force=True)
 
    
-    res = processRequest(req)    
+    res = processRequest(req) 
+    print("Processed Request")   
     res = json.dumps(res, indent=4)
     r = make_response(res)
     r.headers['Content-Type'] = 'application/json'
@@ -49,6 +50,7 @@ def processRequest(req):
     if req.get("result").get("action") != "SearchProductInTarget":
         return {}
     responseT = makeTargetQuery(req)
+    print("Made Target Query")
     if responseT is None:
         return {}
     res = makeWebhookResult(responseT)
@@ -62,10 +64,12 @@ def SearchAPICaller(search_string):
     base_url = "http://10.63.77.129/v1/target/select?authKey=0a81a798b7fea7908b14cff9d95eaa75&q=%s&rows=10"    
     url=base_url % search_string
     #resp = requests.get(url).json()
+    print("url")
     resp1=urlopen(url).read()
     #encoding = webURL.info().get_content_charset('utf-8')
-    
+    print("Got response")
     resp=json.loads(resp1.decode("utf-8"))
+    print(resp)
     returnVal=defaultdict(dict)
     for x in range (0,9):
         returnVal["sku"][x]=resp['response']['docs'][x]['sku'] 
@@ -77,7 +81,8 @@ def makeTargetQuery(req):
     result = req.get("result")
     parameters = result.get("parameters")
     things = parameters.get("Things")
-    search_string=things    
+    search_string=things 
+    print("Calling Target API")   
     return SearchAPICaller(search_string)
 
 
