@@ -1,4 +1,3 @@
 web: python app.py
-worker:    bundle exec rake resque:work QUEUE=*
-urgworker: bundle exec rake resque:work QUEUE=urgent
-clock:     bundle exec resque-scheduler
+worker:        env QUEUE=* bundle exec rake resque:work
+urgentworker:  env QUEUE=urgent bundle exec rake resque:work
