@@ -37,13 +37,9 @@ app = Flask(__name__)
 def webhook():
     req = request.get_json(silent=True, force=True)
 
-    print("Request:")
-    print(json.dumps(req, indent=4))
-
-    res = processRequest(req)
-    print("Hi  ....",res)
+   
+    res = processRequest(req)    
     res = json.dumps(res, indent=4)
-    print("Hi2....",res)
     r = make_response(res)
     r.headers['Content-Type'] = 'application/json'
     return r
@@ -66,13 +62,10 @@ def SearchAPICaller(search_string):
     base_url = "http://10.63.77.129/v1/target/select?authKey=0a81a798b7fea7908b14cff9d95eaa75&q=%s&rows=10"    
     url=base_url % search_string
     #resp = requests.get(url).json()
-    print("I am here")
     resp1=urlopen(url).read()
     #encoding = webURL.info().get_content_charset('utf-8')
     
     resp=json.loads(resp1.decode("utf-8"))
-    print("I am here2")
-    print(resp)
     returnVal=defaultdict(dict)
     for x in range (0,9):
         returnVal["sku"][x]=resp['response']['docs'][x]['sku'] 
