@@ -41,9 +41,9 @@ def webhook():
     print(json.dumps(req, indent=4))
 
     res = processRequest(req)
-
+    print("Hi  ....",res)
     res = json.dumps(res, indent=4)
-    # print(res)
+    print("Hi2....",res)
     r = make_response(res)
     r.headers['Content-Type'] = 'application/json'
     return r
@@ -52,11 +52,10 @@ def webhook():
 def processRequest(req):
     if req.get("result").get("action") != "SearchProductInTarget":
         return {}
-    baseurl = "https://query.yahooapis.com/v1/public/yql?"
     responseT = makeTargetQuery(req)
     if responseT is None:
         return {}
-    res = makeWebhookResult(data)
+    res = makeWebhookResult(responseT)
     return res
 
 import requests
@@ -64,27 +63,27 @@ from collections import defaultdict
 import json 
 
 def SearchAPICaller(search_string):
-    base_url = "http://10.63.77.129/v1/target/select?authKey=0a81a798b7fea7908b14cff9d95eaa75&q=%s&rows=10"
+    base_url = "http://10.63.77.129/v1/target/select?authKey=0a81a798b7fea7908b14cff9d95eaa75&q=%s&rows=10"    
     url=base_url % search_string
     resp = requests.get(url).json()
     returnVal=defaultdict(dict)
     for x in range (0,9):
         returnVal["sku"][x]=resp['response']['docs'][x]['sku'] 
         returnVal['desc'][x]=resp['response']['docs'][x]['NAME']
-        #returnVal['image'][x] = resp['response']['docs'][x]['IMGURL']
+        #returnVal['image'][x] = resp['response']['docs'][x]['IMGURL']   
     return json.dumps(returnVal)
     
 def makeTargetQuery(req):
     result = req.get("result")
     parameters = result.get("parameters")
     things = parameters.get("Things")
-    number = parameters.get("number")
-    search_string= number + things
+    search_string=things    
     return SearchAPICaller(search_string)
 
 
 def makeWebhookResult(data):
-    speech = "Hey, I am confused, did you buy " + data["sku"][0] +" or "+ data["sku"][1]   
+    data1=json.loads(data)
+    speech = "Hey, I am confused, did you buy " + data1["sku"]['0'] +" or "+ data1["sku"]['1']   
     return {
         "speech": speech,
         "displayText": speech,
